@@ -22,6 +22,7 @@
 
 class PicoTags extends AbstractPicoPlugin
 {
+    private $filteredPages;
 
     /**
      * Register the "Tags" and "Filter" meta header fields.
@@ -68,11 +69,29 @@ class PicoTags extends AbstractPicoPlugin
         if ($currentPage && !empty($currentPage['meta']['filter'])) {
             $tagsToShow = $currentPage['meta']['filter'];
 
-            $pages = array_filter($pages, function ($page) use ($tagsToShow) {
+            $this->filteredPages = array_filter($pages, function ($page) use ($tagsToShow) {
                 $tags = PicoTags::parseTags($page['meta']['tags']);
                 return count(array_intersect($tagsToShow, $tags)) > 0;
             });
         }
+        else {
+            $this->filteredPages = $pages;
+        }
+    }
+    
+    /**
+     * Triggered before Pico renders the page
+     *
+     * @see    Pico::getTwig()
+     * @see    DummyPlugin::onPageRendered()
+     * @param  Twig_Environment &$twig          twig template engine
+     * @param  array            &$twigVariables template variables
+     * @param  string           &$templateName  file name of the template
+     * @return void
+     */
+    public function onPageRendering(Twig_Environment &$twig, array &$twigVariables)
+    {
+        $twigVariables['filteredPages'] = $this->filteredPages;
     }
 
     /**
